@@ -62,16 +62,18 @@ Also useful if you already run Equalizer APO and want a **fast, measured startin
 ## How it works
 
 ```
-Headphones → beep Yes/No test (15 bands × 2 ears)
-           → gain map + preamp headroom
+Headphones → volume locked to fixed reference (calibration)
+           → beep Yes/No test (15 bands × 2 ears, dB-domain staircase)
+           → gain map relative to your best band + preamp headroom
            → Equalizer APO config (hot-reload)
            → all Windows audio apps
 ```
 
-1. **Hearing check** — pure sine beeps, left then right, **15 frequencies up to 16 kHz**. Answer Yes/No. An adaptive staircase finds your softest audible level per band.  
-2. **Profile math** — thresholds → dB boosts per ear; global preamp cut limits clipping.  
-3. **Apply** — writes `Open-AdaptSound.txt` and `Include:` into Equalizer APO (other APO lines kept).  
-4. **Everyday use** — APO equalizes the audio stack; Open-AdaptSound can sit in the system tray.
+1. **Calibration** — Windows volume is locked to a **fixed reference level** during the test (the same trick phone hearing tests use) and restored afterward, so results don't depend on where your volume slider was. Any already-applied profile is suspended so retests stay clean.  
+2. **Hearing check** — pure sine beeps, left then right, **15 frequencies up to 16 kHz**. Answer Yes/No. A decibel-domain adaptive staircase (like clinical audiometry) homes in on your true threshold per band, with equal-loudness weighting so lows/highs are tested fairly.  
+3. **Profile math** — thresholds → dB boosts per ear, computed **relative to your best band** (self-calibrating for your headphones); a global preamp cut prevents clipping.  
+4. **Apply** — writes `Open-AdaptSound.txt` and `Include:` into Equalizer APO (other APO lines kept).  
+5. **Everyday use** — APO equalizes the audio stack; Open-AdaptSound can sit in the system tray.
 
 Not a media player. Not a VST. **Configuration app + Equalizer APO.**
 
@@ -80,8 +82,9 @@ Not a media player. Not a VST. **Configuration app + Equalizer APO.**
 ## Features
 
 - Offline beep test (**Y** / **N** keys)
+- **Calibrated test level** — system volume locked to a fixed reference during the test, auto-restored after
 - Full map: `125 · 250 · 500 · 750 · 1k · 1.5k · 2k · 3k · 4k · 6k · 8k · 10k · 12k · 14k · 16k` Hz  
-- Adaptive staircase thresholds  
+- dB-domain adaptive staircase thresholds with equal-loudness weighting  
 - Independent **L/R parametric peaks** (`Channel: L` / `Channel: R`)  
 - Dynamic **preamp headroom**  
 - Safe merge with existing Equalizer APO configs  

@@ -1,7 +1,7 @@
 {
   "name": "open-adaptsound",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Personal hearing equalizer for Windows — beep test to system-wide EQ via Equalizer APO",
   "keywords": [
     "windows",

@@ -1,10 +1,16 @@
 /**
- * Audio math: threshold volumes → parametric EQ gains + preamp headroom.
+ * Audio math: dB HL thresholds → parametric EQ gains + preamp headroom.
+ *
+ * The hearing test measures a threshold per band in "dB HL-ish" units
+ * (0 ≈ excellent hearing at the calibrated reference volume). Gains are
+ * computed RELATIVE to the user's best band, which self-calibrates for
+ * headphone sensitivity and system volume: EQ can only fix the *shape*
+ * of hearing loss, never uniform loss (that's the volume knob's job).
  *
  * Modes:
- *  - full     : 100% log inversion (PRD baseline)
+ *  - full     : 100% inversion of the measured curve
  *  - half     : 50% (classic half-gain rule — safer everyday listening)
- *  - gentle   : 40% softer compensation
+ *  - gentle   : 35% subtle compensation
  */
 
 /**
@@ -15,8 +21,47 @@ export const FREQUENCIES = [
   125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000, 10000, 12000, 14000, 16000,
 ];
 
-/** Midpoint of PRD healthy baseline range (0.05–0.1). */
-export const BASELINE_THRESHOLD = 0.075;
+/**
+ * Equal-loudness correction per band, approximating the ISO 226 threshold
+ * of hearing (dB SPL needed at threshold vs. mid frequencies). A pure sine
+ * at the same dBFS is far harder to hear at 125 Hz or 16 kHz than at 2 kHz;
+ * presenting each band with this offset makes "0 dB HL" mean roughly the
+ * same *perceptual* threshold everywhere. Values above 8 kHz are
+ * extrapolated (headphone response dominates up there anyway).
+ */
+export const EQUAL_LOUDNESS_OFFSET_DB = {
+  125: 22,
+  250: 12,
+  500: 4,
+  750: 3,
+  1000: 2,
+  1500: 1,
+  2000: -1,
+  3000: -5,
+  4000: -5,
+  6000: 3,
+  8000: 13,
+  10000: 16,
+  12000: 21,
+  14000: 27,
+  16000: 38,
+};
+
+/** dBFS that corresponds to 0 dB HL at the calibrated reference volume. */
+export const REF_DBFS_AT_0HL = -85;
+
+/** Presentation clamp so tones never clip or disappear into float noise. */
+export const PRESENT_MIN_DBFS = -95;
+export const PRESENT_MAX_DBFS = -6;
+
+/** Ignore threshold differences smaller than this (measurement noise). */
+export const DEADBAND_DB = 3;
+
+/** Safety cap so extreme thresholds never produce dangerous boosts. */
+export const MAX_GAIN_DB = 15.0;
+
+/** Neutral threshold used to fill missing bands. */
+export const BASELINE_HL = 0;
 
 /**
  * Parametric peaking Q.
@@ -24,49 +69,36 @@ export const BASELINE_THRESHOLD = 0.075;
  */
 export const DEFAULT_Q = 1.8;
 
-/** Safety cap so extreme thresholds never produce dangerous boosts. */
-export const MAX_GAIN_DB = 18.0;
-
-export const MIN_THRESHOLD = 0.001;
-export const MAX_THRESHOLD = 1.0;
-
 /** Compensation intensity modes. */
 export const MODES = {
   full: { id: "full", label: "Full clarity", factor: 1.0, blurb: "Strongest match to your test" },
   half: { id: "half", label: "Balanced", factor: 0.5, blurb: "Natural everyday boost (recommended)" },
-  gentle: { id: "gentle", label: "Gentle", factor: 0.4, blurb: "Subtle lift — good for music first" },
+  gentle: { id: "gentle", label: "Gentle", factor: 0.35, blurb: "Subtle lift — good for music first" },
 };
 
 /**
- * Convert a normalized volume threshold (0–1) to compensation gain in dB.
- * @param {number} threshold
- * @param {object} [opts]
- * @param {number} [opts.baseline]
- * @param {number} [opts.factor] 0..1 scale of full inversion
- * @param {number} [opts.maxGainDb]
+ * Convert a staircase level (dB HL) for a band into the dBFS the tone
+ * generator should actually play, including the equal-loudness offset.
+ * @param {number} frequency
+ * @param {number} levelHl
+ * @returns {number} presentation level in dBFS
  */
-export function thresholdToGainDb(threshold, opts = {}) {
-  const baseline = opts.baseline ?? BASELINE_THRESHOLD;
-  const factor = opts.factor ?? 1.0;
-  const maxGain = opts.maxGainDb ?? MAX_GAIN_DB;
+export function hlToPresentationDbfs(frequency, levelHl) {
+  const offset = EQUAL_LOUDNESS_OFFSET_DB[frequency] ?? 0;
+  const dbfs = REF_DBFS_AT_0HL + offset + levelHl;
+  return clamp(dbfs, PRESENT_MIN_DBFS, PRESENT_MAX_DBFS);
+}
 
-  const t = clamp(Number(threshold), MIN_THRESHOLD, MAX_THRESHOLD);
-  const b = Math.max(MIN_THRESHOLD, Number(baseline) || BASELINE_THRESHOLD);
-
-  if (t <= b) {
-    return 0;
-  }
-
-  const raw = 20 * Math.log10(t / b) * clamp(factor, 0, 1);
-  const capped = Math.min(maxGain, raw);
-  return round1(capped);
+/** dBFS → linear Web Audio gain. */
+export function dbToGain(db) {
+  return Math.pow(10, db / 20);
 }
 
 /**
  * Build left/right filter maps and dynamic preamp from measured thresholds.
  *
- * @param {Record<number, number>|Map|Array} leftThresholds
- * @param {Record<number, number>|Map|Array} rightThresholds
+ * @param {Record<number, number>} leftThresholds  dB HL per frequency
+ * @param {Record<number, number>} rightThresholds dB HL per frequency
  * @param {{ mode?: string, factor?: number }} [options]
  */
 export function buildProfile(leftThresholds, rightThresholds, options = {}) {
@@ -77,30 +109,34 @@ export function buildProfile(leftThresholds, rightThresholds, options = {}) {
   const left = normalizeThresholdMap(leftThresholds);
   const right = normalizeThresholdMap(rightThresholds);
 
+  // Reference = the user's best hearing across all bands and both ears.
+  // Average of the two lowest values so a single lucky "yes" can't drag
+  // the whole reference down and inflate every other gain.
+  const reference = bestReference([
+    ...FREQUENCIES.map((f) => left[f]),
+    ...FREQUENCIES.map((f) => right[f]),
+  ]);
+
+  const gainFor = (hl) => {
+    if (hl == null || Number.isNaN(Number(hl))) return 0;
+    const raw = (Number(hl) - reference - DEADBAND_DB) * clamp(factor, 0, 1);
+    return round1(clamp(raw, 0, MAX_GAIN_DB));
+  };
+
   const filters = [];
   const leftGains = {};
   const rightGains = {};
   let maxBoost = 0;
 
   for (const freq of FREQUENCIES) {
-    const lGain = thresholdToGainDb(left[freq] ?? BASELINE_THRESHOLD, { factor });
-    const rGain = thresholdToGainDb(right[freq] ?? BASELINE_THRESHOLD, { factor });
+    const lGain = gainFor(left[freq]);
+    const rGain = gainFor(right[freq]);
     leftGains[freq] = lGain;
     rightGains[freq] = rGain;
     maxBoost = Math.max(maxBoost, lGain, rGain);
 
-    filters.push({
-      frequency: freq,
-      gainDb: lGain,
-      q: DEFAULT_Q,
-      channel: "L",
-    });
-    filters.push({
-      frequency: freq,
-      gainDb: rGain,
-      q: DEFAULT_Q,
-      channel: "R",
-    });
+    filters.push({ frequency: freq, gainDb: lGain, q: DEFAULT_Q, channel: "L" });
+    filters.push({ frequency: freq, gainDb: rGain, q: DEFAULT_Q, channel: "R" });
   }
 
   const preampDb = maxBoost > 0 ? round1(-maxBoost) : 0;
@@ -111,9 +147,20 @@ export function buildProfile(leftThresholds, rightThresholds, options = {}) {
     leftGains,
     rightGains,
     maxBoost: round1(maxBoost),
+    reference: round1(reference),
     mode: mode.id,
     factor,
   };
+}
+
+function bestReference(values) {
+  const nums = values
+    .map((v) => Number(v))
+    .filter((v) => !Number.isNaN(v))
+    .sort((a, b) => a - b);
+  if (!nums.length) return BASELINE_HL;
+  if (nums.length === 1) return nums[0];
+  return (nums[0] + nums[1]) / 2;
 }
 
 /**
@@ -136,7 +183,7 @@ export function describeProfile(profile) {
 
   const parts = [];
   if (overall < 1) {
-    parts.push("Your hearing looks strong across the board — little or no boost needed.");
+    parts.push("Your hearing looks even across the board — little or no boost needed.");
   } else if (overall < 4) {
     parts.push("A light personal touch will make quiet details easier to catch.");
   } else if (overall < 9) {
@@ -209,11 +256,15 @@ function round1(n) {
 
 export default {
   FREQUENCIES,
-  BASELINE_THRESHOLD,
+  EQUAL_LOUDNESS_OFFSET_DB,
+  REF_DBFS_AT_0HL,
+  BASELINE_HL,
+  DEADBAND_DB,
   DEFAULT_Q,
   MAX_GAIN_DB,
   MODES,
-  thresholdToGainDb,
+  hlToPresentationDbfs,
+  dbToGain,
   buildProfile,
   describeProfile,
   profileToInvokePayload,

@@ -6,7 +6,7 @@
     <title>Open-AdaptSound — Personal Hearing Equalizer for Windows</title>
     <meta
       name="description"
-      content="Official release site. Free Windows personal hearing equalizer: beep Yes/No test per ear (15 bands to 16 kHz), system-wide EQ via Equalizer APO."
+      content="Official release site. Free Windows personal hearing equalizer: calibrated beep test per ear (fixed reference volume, 15 bands to 16 kHz), system-wide EQ via Equalizer APO."
     />
     <meta name="author" content="Open-AdaptSound" />
     <link rel="canonical" href="https://sreesaiarjun.github.io/open-adaptsound/" />
@@ -68,9 +68,10 @@
           <p class="eyebrow">Official release · Windows 10 / 11 · Free · MIT</p>
           <h1>Personal hearing equalizer for your whole PC</h1>
           <p class="lead">
-            Beep-test each ear, build a left/right frequency map, and apply a
-            system-wide EQ profile through Equalizer APO—games, browser, calls,
-            and music use the same tuning.
+            Beep-test each ear at a calibrated, fixed reference volume — like a
+            phone's adapt-sound test — then apply a left/right EQ profile
+            system-wide through Equalizer APO. Games, browser, calls, and music
+            all use the same tuning.
           </p>
           <div class="cta-row">
             <a
@@ -130,13 +131,16 @@
         <ol class="steps">
           <li>
             <span class="step-num">1</span>
-            <strong>Hearing check</strong>
-            Pure sine beeps, left then right, 15 bands to 16 kHz. Answer Yes or No.
+            <strong>Calibrated hearing check</strong>
+            System volume locks to a fixed reference (auto-restored after). Pure sine
+            beeps, left then right, 15 bands to 16 kHz. Answer Yes or No — a
+            decibel-domain staircase finds your true threshold per band.
           </li>
           <li>
             <span class="step-num">2</span>
             <strong>Profile</strong>
-            Thresholds become dB gains + preamp headroom (Gentle / Balanced / Full).
+            Thresholds become dB gains relative to your best band + preamp headroom
+            (Gentle / Balanced / Full).
           </li>
           <li>
             <span class="step-num">3</span>
@@ -222,6 +226,14 @@
           <details>
             <summary>Headphones or speakers?</summary>
             <p>Designed for headphones so left/right tones stay isolated.</p>
+          </details>
+          <details>
+            <summary>Why does my volume change during the test?</summary>
+            <p>
+              The test locks Windows volume to a fixed reference level so results
+              don't depend on where your slider happens to be — the same trick
+              phone hearing tests use. Your previous volume is restored automatically.
+            </p>
           </details>
           <details>
             <summary>Does it wipe my existing APO config?</summary>

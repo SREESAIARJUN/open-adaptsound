@@ -33,57 +33,30 @@
           <div class="status-chip" id="apo-chip" role="status">
             Checking Equalizer APO…
           </div>
-
-          <!-- Required driver callout -->
-          <div class="req-panel" id="req-panel">
-            <strong>Requires Equalizer APO</strong>
-            <p>
-              This app does <em>not</em> process audio itself. It configures
-              <strong>Equalizer APO</strong> (free system audio driver). First-time setup:
-            </p>
-            <ol class="req-steps">
-              <li>Install Equalizer APO (official installer)</li>
-              <li>In <strong>Device Selector</strong>, enable your <strong>headphones</strong></li>
-              <li><strong>Reboot Windows</strong> when asked</li>
-              <li>Open Open-AdaptSound again → run the beep test → Apply</li>
-            </ol>
-            <p class="req-note">
-              We don’t bundle the driver inside this EXE: APO needs device selection + a reboot,
-              which can’t be fully automated safely.
-            </p>
-          </div>
-
-          <ul class="checklist">
-            <li>
-              <span class="icon">🎧</span>
-              <span>Wear your headphones and keep them on the whole time.</span>
-            </li>
-            <li>
-              <span class="icon">🔔</span>
-              <span>Beeps only · Yes / No · 15 full-range bands per ear (to 16 kHz).</span>
-            </li>
-            <li>
-              <span class="icon">🤫</span>
-              <span>Quiet room · ~5 minutes · soft beeps only.</span>
-            </li>
+          <ul class="mini-list">
+            <li><span class="icon">🎧</span><span>Headphones on, both ears</span></li>
+            <li><span class="icon">🤫</span><span>Quiet room · ~5 min</span></li>
+            <li><span class="icon">🔒</span><span>Volume auto-locks for accuracy</span></li>
           </ul>
           <div class="spacer"></div>
           <div class="actions">
             <button class="btn btn-primary" id="btn-start" type="button">
               Start listening check
             </button>
-            <button class="btn btn-ghost" id="btn-install-apo" type="button">
-              Install Equalizer APO (required)
-            </button>
-            <button class="btn btn-ghost" id="btn-apo-help" type="button">
-              Why reboot? Setup help
-            </button>
-            <button class="btn btn-ghost hidden" id="btn-reapply" type="button">
-              Re-apply last profile
-            </button>
-            <button class="btn btn-ghost hidden" id="btn-start-anyway" type="button">
-              Continue without APO (test only)
-            </button>
+            <div class="actions-row">
+              <button class="btn btn-ghost btn-sm" id="btn-apo-help" type="button">
+                Setup help
+              </button>
+              <button class="btn btn-ghost btn-sm hidden" id="btn-install-apo" type="button">
+                Get Equalizer APO
+              </button>
+              <button class="btn btn-ghost btn-sm hidden" id="btn-reapply" type="button">
+                Re-apply last profile
+              </button>
+              <button class="btn btn-ghost btn-sm hidden" id="btn-start-anyway" type="button">
+                Test without APO
+              </button>
+            </div>
           </div>
         </section>
 
@@ -187,6 +160,7 @@
             <span class="wave">🔔</span>
           </div>
           <p class="hear-hint" id="left-hint">Listen… beeps are playing now</p>
+          <p class="cal-note" id="left-cal-note"></p>
           <div class="spacer"></div>
           <div class="actions yesno-actions">
             <button class="btn btn-yes" id="btn-left-yes" type="button">
@@ -195,7 +169,10 @@
             <button class="btn btn-no" id="btn-left-no" type="button">
               No — I can’t hear it
             </button>
-            <button class="btn btn-ghost" id="btn-left-back" type="button">Back</button>
+            <div class="actions-row">
+              <button class="btn btn-ghost btn-sm" id="btn-left-back" type="button">Back</button>
+              <span class="key-hint">Keys: Y / N</span>
+            </div>
           </div>
         </section>
 
@@ -217,6 +194,7 @@
             <span class="wave">🔔</span>
           </div>
           <p class="hear-hint" id="right-hint">Listen… beeps are playing now</p>
+          <p class="cal-note" id="right-cal-note"></p>
           <div class="spacer"></div>
           <div class="actions yesno-actions">
             <button class="btn btn-yes" id="btn-right-yes" type="button">
@@ -225,7 +203,10 @@
             <button class="btn btn-no" id="btn-right-no" type="button">
               No — I can’t hear it
             </button>
-            <button class="btn btn-ghost" id="btn-right-back" type="button">Back</button>
+            <div class="actions-row">
+              <button class="btn btn-ghost btn-sm" id="btn-right-back" type="button">Back</button>
+              <span class="key-hint">Keys: Y / N</span>
+            </div>
           </div>
         </section>
 
@@ -253,21 +234,23 @@
             <button class="btn btn-primary" id="btn-apply" type="button">
               Apply Adapt Sound Profile
             </button>
-            <button class="btn btn-ghost hidden" id="btn-retake" type="button">
-              Retake listening check
-            </button>
-            <button class="btn btn-ghost hidden" id="btn-reset" type="button">
-              Reset to flat sound
-            </button>
-            <button class="btn btn-ghost hidden" id="btn-export" type="button">
-              Save profile copy
-            </button>
-            <button class="btn btn-ghost hidden" id="btn-open-config" type="button">
-              Open config folder
-            </button>
-            <button class="btn btn-danger hidden" id="btn-disable" type="button">
-              Disable Adapt Sound
-            </button>
+            <div class="actions-row">
+              <button class="btn btn-ghost btn-sm hidden" id="btn-retake" type="button">
+                Retake test
+              </button>
+              <button class="btn btn-ghost btn-sm hidden" id="btn-reset" type="button">
+                Reset to flat
+              </button>
+              <button class="btn btn-ghost btn-sm hidden" id="btn-export" type="button">
+                Save a copy
+              </button>
+              <button class="btn btn-ghost btn-sm hidden" id="btn-open-config" type="button">
+                Config folder
+              </button>
+              <button class="btn btn-danger btn-sm hidden" id="btn-disable" type="button">
+                Disable
+              </button>
+            </div>
           </div>
         </section>
 

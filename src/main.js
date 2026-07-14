@@ -9,14 +9,17 @@ import {
   buildProfile,
   describeProfile,
   profileToInvokePayload,
-  BASELINE_THRESHOLD,
+  hlToPresentationDbfs,
+  dbToGain,
+  BASELINE_HL,
   MODES,
 } from "./calculator.js";
 import { loadSettings, saveSettings } from "./settings.js";
 import { createStaircase, answerStaircase } from "./staircase.js";
 
 const STEPS = 5;
-const STORAGE_KEY = "open-adaptsound-last-profile";
+// v2: thresholds stored in dB HL (v1 stored linear gain — incompatible)
+const STORAGE_KEY = "open-adaptsound-last-profile-v2";
 
 const invoke =
   window.__TAURI__?.core?.invoke ??
@@ -31,6 +34,16 @@ const invoke =
         message: "Preview mode — Tauri backend not connected.",
       };
     }
+    if (cmd === "begin_test_session") {
+      return {
+        volumeLocked: false,
+        calibrationVolume: 0.5,
+        previousVolume: null,
+        profileSuspended: false,
+        message: "Preview mode — set your volume to ~50% manually.",
+      };
+    }
+    if (cmd === "end_test_session") return false;
     if (cmd === "preview_config") return "# preview mode\n";
     if (cmd === "list_config_backups") return [];
     if (cmd === "get_last_applied_preview") return null;
@@ -60,6 +73,8 @@ const state = {
   stair: null,
   /** Debounce double-taps during level change */
   answering: false,
+  /** Volume-calibration session active (system volume locked) */
+  calibrated: false,
 };
 
 const engine = new ToneEngine();
@@ -109,6 +124,8 @@ async function openApoDownload() {
 
 function openSettings() {
   state.prevStep = state.step;
+  // Pause beeps while the overlay is open — they used to keep playing here
+  if (state.prevStep === 2 || state.prevStep === 3) engine.stop();
   const s = state.settings;
   $("#set-mode").value = s.mode || "half";
   refreshApoChip();
@@ -125,12 +142,40 @@ function closeSettings() {
     toneMode: "beep",
   });
   engine.setToneMode("beep");
-  if (state.step === 4 && Object.keys(state.left).length) {
+  const back = state.prevStep ?? 0;
+  if (back === 4 && Object.keys(state.left).length) {
     rebuildProfileFromThresholds();
   }
-  if (state.step === 2) startEarBand("L");
-  else if (state.step === 3) startEarBand("R");
-  showStep(state.prevStep ?? 0);
+  showStep(back);
+  // Resume the interrupted band (fresh staircase for a clean measurement)
+  if (back === 2) startEarBand("L");
+  else if (back === 3) startEarBand("R");
+}
+
+/* ─── Volume calibration session ─── */
+async function beginCalibration() {
+  if (state.calibrated) return;
+  try {
+    const info = await invoke("begin_test_session");
+    state.calibrated = true;
+    const note = info?.message || "";
+    const el1 = $("#left-cal-note");
+    const el2 = $("#right-cal-note");
+    if (el1) el1.textContent = note;
+    if (el2) el2.textContent = note;
+  } catch (err) {
+    console.warn("begin_test_session failed", err);
+  }
+}
+
+async function endCalibration() {
+  if (!state.calibrated) return;
+  state.calibrated = false;
+  try {
+    await invoke("end_test_session");
+  } catch (err) {
+    console.warn("end_test_session failed", err);
+  }
 }
 
 function initThresholds() {
@@ -154,42 +199,35 @@ async function refreshApoChip() {
   }
   if (!chip) return;
   chip.classList.remove("ok", "warn", "err");
-  const req = $("#req-panel");
   const startBtn = $("#btn-start");
   const anyway = $("#btn-start-anyway");
-  const reqTitle = req?.querySelector("strong");
+  const installBtn = $("#btn-install-apo");
 
   if (!state.apo) {
     chip.textContent = "Could not check Equalizer APO status.";
     chip.classList.add("warn");
-    req?.classList.remove("ok");
-    if (reqTitle) reqTitle.textContent = "Requires Equalizer APO";
     anyway?.classList.remove("hidden");
+    installBtn?.classList.remove("hidden");
     return;
   }
   if (!state.apo.installed) {
-    chip.textContent = "Equalizer APO not found — install + reboot required for system-wide sound.";
+    chip.textContent = "Equalizer APO not found — needed for system-wide sound.";
     chip.classList.add("err");
-    req?.classList.remove("ok");
-    if (reqTitle) reqTitle.textContent = "Requires Equalizer APO";
-    if (startBtn) startBtn.textContent = "Install Equalizer APO first";
+    if (startBtn) startBtn.textContent = "Set up Equalizer APO";
     anyway?.classList.remove("hidden");
+    installBtn?.classList.remove("hidden");
   } else if (state.apo.profileActive) {
     chip.textContent = "Equalizer APO ready · Adapt Sound profile is active.";
     chip.classList.add("ok");
-    req?.classList.add("ok");
-    if (reqTitle) reqTitle.textContent = "Equalizer APO detected";
     if (startBtn) startBtn.textContent = "Start listening check";
     anyway?.classList.add("hidden");
+    installBtn?.classList.add("hidden");
   } else {
-    chip.textContent = state.apo.canWrite
-      ? "Equalizer APO ready — reboot already done? You’re good to test."
-      : "Equalizer APO ready — admin prompt may appear when you Apply.";
+    chip.textContent = "Equalizer APO ready.";
     chip.classList.add("ok");
-    req?.classList.add("ok");
-    if (reqTitle) reqTitle.textContent = "Equalizer APO detected";
     if (startBtn) startBtn.textContent = "Start listening check";
     anyway?.classList.add("hidden");
+    installBtn?.classList.add("hidden");
   }
 }
 
@@ -248,8 +286,9 @@ async function onNoiseCheck() {
   btn.textContent = "Check again";
 }
 
-function continueFromNoise() {
+async function continueFromNoise() {
   showStep(2);
+  await beginCalibration();
   startEarBand("L");
 }
 
@@ -275,13 +314,8 @@ function updateEarChrome(ear) {
   band.style.width = bandWidth(idx);
   visual.classList.add("playing", "pulse-mode");
 
-  if (state.stair && !state.stair.done) {
-    const n = state.stair.trials;
-    if (n === 0) {
-      hint.textContent = "Listen… beeps are playing now";
-    } else {
-      hint.textContent = "Still listening… answer again when ready";
-    }
+  if (state.stair && !state.stair.done && state.stair.trials === 0) {
+    hint.textContent = "Listen… beeps are playing now";
   }
 }
 
@@ -295,7 +329,14 @@ async function startEarBand(ear) {
   setAnswerButtonsEnabled(ear, true);
   updateEarChrome(ear);
 
-  await engine.play(freq, ear, state.stair.level, { mode: toneMode() });
+  await engine.play(freq, ear, presentationGain(freq, state.stair.level), {
+    mode: toneMode(),
+  });
+}
+
+/** dB HL staircase level → linear Web Audio gain for this band. */
+function presentationGain(freq, levelHl) {
+  return dbToGain(hlToPresentationDbfs(freq, levelHl));
 }
 
 /**
@@ -328,9 +369,10 @@ async function onHearAnswer(ear, heard) {
   }
 
   // Keep same frequency, new level — beeps keep playing
-  engine.setVolume(result.level);
+  const gain = presentationGain(freq, result.level);
+  engine.setVolume(gain);
   if (!engine.playing) {
-    await engine.play(freq, ear, result.level, { mode: toneMode() });
+    await engine.play(freq, ear, gain, { mode: toneMode() });
   }
 
   hint.textContent = heard
@@ -363,10 +405,12 @@ async function advanceAfterBand(ear) {
     state.rightIndex = 0;
     await startEarBand("R");
   } else {
+    // Test finished — restore the user's volume & any suspended profile
+    await endCalibration();
     // Fill any nulls with baseline (shouldn't happen)
     for (const f of FREQUENCIES) {
-      if (state.left[f] == null) state.left[f] = BASELINE_THRESHOLD;
-      if (state.right[f] == null) state.right[f] = BASELINE_THRESHOLD;
+      if (state.left[f] == null) state.left[f] = BASELINE_HL;
+      if (state.right[f] == null) state.right[f] = BASELINE_HL;
     }
     finalizeProfile();
     showStep(4);
@@ -394,6 +438,7 @@ async function onEarBack(ear) {
 
   engine.stop();
   if (isLeft) {
+    await endCalibration();
     showStep(1);
   } else {
     showStep(2);
@@ -409,8 +454,8 @@ function rebuildProfileFromThresholds() {
   const left = {};
   const right = {};
   for (const f of FREQUENCIES) {
-    left[f] = state.left[f] ?? BASELINE_THRESHOLD;
-    right[f] = state.right[f] ?? BASELINE_THRESHOLD;
+    left[f] = state.left[f] ?? BASELINE_HL;
+    right[f] = state.right[f] ?? BASELINE_HL;
   }
   state.profile = buildProfile(left, right, { mode });
   $("#apply-summary").textContent = describeProfile(state.profile);
@@ -612,6 +657,7 @@ function downloadText(filename, text) {
 
 function onRetake() {
   engine.stop();
+  endCalibration();
   initThresholds();
   state.leftIndex = 0;
   state.rightIndex = 0;
@@ -722,7 +768,11 @@ function wire() {
     }
   });
 
-  window.addEventListener("beforeunload", () => engine.stop());
+  window.addEventListener("beforeunload", () => {
+    engine.stop();
+    // Best effort: never leave system volume stuck at calibration level
+    if (state.calibrated) invoke("end_test_session").catch(() => {});
+  });
 
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && document.querySelector("#step-settings.active")) {
@@ -766,7 +816,7 @@ window.addEventListener("DOMContentLoaded", wire);
 window.__OpenAdaptSound = {
   state,
   FREQUENCIES,
-  BASELINE_THRESHOLD,
+  BASELINE_HL,
   MODES,
   buildProfile,
   describeProfile,

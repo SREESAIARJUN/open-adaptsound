@@ -28,6 +28,10 @@ Device selection is interactive, and first install expects a reboot. See [EQUALI
 
 ## Hearing test
 
+### Why does my Windows volume change during the test?
+
+The test **locks system volume to a fixed reference level** so results don't depend on where your volume slider happens to be — the same approach phone hearing tests use. Your previous volume (and any active profile) is **restored automatically** when the test ends.
+
 ### How many frequencies?
 
 **15 per ear**, from **125 Hz to 16 kHz**.

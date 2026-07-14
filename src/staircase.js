@@ -3,7 +3,13 @@
  *
  * Samsung-style UX: user only answers "can you hear it?"
  * Under the hood: staircase (like clinical audiometry) homes in on
- * the softest level they can still hear — stored as 0..1 for the EQ math.
+ * the softest level they can still hear.
+ *
+ * Levels are in dB HL-ish units (0 ≈ excellent hearing at the calibrated
+ * reference volume, 70 ≈ needs a big boost at this band). Working in dB —
+ * not linear gain — is what makes quiet levels actually quiet: each step
+ * is an equal *perceptual* change, and the floor sits near the true
+ * threshold of hearing instead of at a still-audible linear value.
  *
  * Rules (simplified Hughson–Westlake):
  *  - Hear it  → play quieter
@@ -13,19 +19,19 @@
  */
 
 export const STAIR_DEFAULTS = {
-  /** First presentation level (clearly audible for most). */
-  startLevel: 0.28,
-  /** Initial step size in linear gain. */
-  startStep: 0.1,
-  /** Don't shrink step below this. */
-  minStep: 0.018,
-  /** Absolute volume floor / ceiling. */
-  minLevel: 0.002,
-  maxLevel: 1.0,
+  /** First presentation level in dB HL (clearly audible for most). */
+  startLevel: 35,
+  /** Initial step size in dB. */
+  startStep: 10,
+  /** Don't shrink step below this (dB). */
+  minStep: 2.5,
+  /** Level floor / ceiling in dB HL. Negative floor = better than reference. */
+  minLevel: -10,
+  maxLevel: 70,
   /** Stop after this many direction changes. */
   reversalsNeeded: 4,
   /** Safety: force finish after this many Yes/No answers. */
-  maxTrials: 14,
+  maxTrials: 15,
   /** Average this many last reversals for the final threshold. */
   averageLast: 4,
 };

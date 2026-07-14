@@ -6,6 +6,7 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::Mutex;
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -64,6 +65,83 @@ pub struct BackupInfo {
     pub path: String,
     pub name: String,
     pub modified: Option<String>,
+}
+
+// ─── System volume calibration (Windows Core Audio) ───────────────
+//
+// Samsung's Adapt Sound runs its test at a fixed media volume so thresholds
+// are comparable regardless of where the user left the volume slider.
+// We do the same: lock the default render endpoint to a reference level
+// for the duration of the test, then restore the user's previous state.
+
+/// Reference master-volume scalar used while the hearing test runs.
+const CALIBRATION_VOLUME: f32 = 0.5;
+
+struct TestSession {
+    prev_volume: f32,
+    prev_mute: bool,
+    /// Profile text we temporarily replaced with a flat profile (so an
+    /// already-applied EQ doesn't color the new test). Restored on end.
+    suspended_profile: Option<(PathBuf, String)>,
+}
+
+static TEST_SESSION: Mutex<Option<TestSession>> = Mutex::new(None);
+
+#[cfg(windows)]
+mod sysvolume {
+    use windows::core::Result;
+    use windows::Win32::Media::Audio::Endpoints::IAudioEndpointVolume;
+    use windows::Win32::Media::Audio::{eMultimedia, eRender, IMMDeviceEnumerator, MMDeviceEnumerator};
+    use windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_MULTITHREADED};
+
+    fn endpoint() -> Result<IAudioEndpointVolume> {
+        unsafe {
+            // Ignore RPC_E_CHANGED_MODE etc. — COM may already be initialized.
+            let _ = CoInitializeEx(None, COINIT_MULTITHREADED);
+            let enumerator: IMMDeviceEnumerator =
+                CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL)?;
+            let device = enumerator.GetDefaultAudioEndpoint(eRender, eMultimedia)?;
+            device.Activate::<IAudioEndpointVolume>(CLSCTX_ALL, None)
+        }
+    }
+
+    pub fn get() -> Result<(f32, bool)> {
+        unsafe {
+            let ep = endpoint()?;
+            let vol = ep.GetMasterVolumeLevelScalar()?;
+            let mute = ep.GetMute()?.as_bool();
+            Ok((vol, mute))
+        }
+    }
+
+    pub fn set(scalar: f32, mute: bool) -> Result<()> {
+        unsafe {
+            let ep = endpoint()?;
+            ep.SetMasterVolumeLevelScalar(scalar.clamp(0.0, 1.0), std::ptr::null())?;
+            ep.SetMute(mute, std::ptr::null())?;
+            Ok(())
+        }
+    }
+}
+
+#[cfg(not(windows))]
+mod sysvolume {
+    pub fn get() -> Result<(f32, bool), String> {
+        Err("not supported".into())
+    }
+    pub fn set(_scalar: f32, _mute: bool) -> Result<(), String> {
+        Err("not supported".into())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TestSessionInfo {
+    pub volume_locked: bool,
+    pub calibration_volume: f32,
+    pub previous_volume: Option<f32>,
+    pub profile_suspended: bool,
+    pub message: String,
 }
 
 // ─── Path resolution ───────────────────────────────────────────────
@@ -397,6 +475,86 @@ fn write_pair(config_path: &Path, config_text: &str, profile_path: &Path, profil
 }
 
 // ─── Commands ──────────────────────────────────────────────────────
+
+/// Lock system volume to the calibration reference and suspend any active
+/// EQ profile so the hearing test runs on a clean, repeatable output chain.
+#[tauri::command]
+fn begin_test_session() -> TestSessionInfo {
+    // End any dangling session first (e.g. app reloaded mid-test).
+    let _ = end_test_session_inner();
+
+    let (volume_locked, previous_volume, prev_state) = match sysvolume::get() {
+        Ok((vol, mute)) => match sysvolume::set(CALIBRATION_VOLUME, false) {
+            Ok(()) => (true, Some(vol), Some((vol, mute))),
+            Err(_) => (false, Some(vol), None),
+        },
+        Err(_) => (false, None, None),
+    };
+
+    // Temporarily flatten our profile (direct write only — never prompt UAC
+    // just to start a test; most APO installs allow user writes here).
+    let mut suspended_profile = None;
+    let (_i, _config, config_dir) = resolve_apo_paths();
+    if let Some(dir) = config_dir {
+        let profile_path = profile_path_from_config_dir(&dir);
+        if let Ok(text) = fs::read_to_string(&profile_path) {
+            let is_active = text.contains(PROFILE_HEADER) && !text.contains("flat response");
+            if is_active && try_direct_write(&profile_path, &flat_profile()).is_ok() {
+                suspended_profile = Some((profile_path, text));
+            }
+        }
+    }
+
+    let profile_suspended = suspended_profile.is_some();
+    if let Some((prev_volume, prev_mute)) = prev_state {
+        *TEST_SESSION.lock().unwrap() = Some(TestSession {
+            prev_volume,
+            prev_mute,
+            suspended_profile,
+        });
+    } else if let Some((path, text)) = suspended_profile {
+        *TEST_SESSION.lock().unwrap() = Some(TestSession {
+            prev_volume: CALIBRATION_VOLUME,
+            prev_mute: false,
+            suspended_profile: Some((path, text)),
+        });
+    }
+
+    TestSessionInfo {
+        volume_locked,
+        calibration_volume: CALIBRATION_VOLUME,
+        previous_volume,
+        profile_suspended,
+        message: if volume_locked {
+            format!(
+                "System volume locked to {:.0}% for calibration. It will be restored after the test.",
+                CALIBRATION_VOLUME * 100.0
+            )
+        } else {
+            "Could not lock system volume — keep your volume unchanged during the test.".into()
+        },
+    }
+}
+
+fn end_test_session_inner() -> bool {
+    let session = TEST_SESSION.lock().unwrap().take();
+    match session {
+        Some(s) => {
+            let _ = sysvolume::set(s.prev_volume, s.prev_mute);
+            if let Some((path, text)) = s.suspended_profile {
+                let _ = try_direct_write(&path, &text);
+            }
+            true
+        }
+        None => false,
+    }
+}
+
+/// Restore volume/mute and any suspended EQ profile after the test.
+#[tauri::command]
+fn end_test_session() -> bool {
+    end_test_session_inner()
+}
 
 #[tauri::command]
 fn check_apo_status() -> ApoStatus {
@@ -739,6 +897,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
+            begin_test_session,
+            end_test_session,
             check_apo_status,
             apply_adapt_sound_profile,
             reset_adapt_sound_profile,
@@ -771,7 +931,11 @@ pub fn run() {
                             let _ = window.set_focus();
                         }
                     }
-                    "quit" => app.exit(0),
+                    "quit" => {
+                        // Never leave the user's volume stuck at the calibration level
+                        end_test_session_inner();
+                        app.exit(0);
+                    }
                     _ => {}
                 })
                 .on_tray_icon_event(|tray, event| {
