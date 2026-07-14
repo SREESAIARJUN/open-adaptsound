@@ -1,0 +1,6 @@
+# Equalizer APO config — user filters are preserved
+Preamp: -1.0 dB
+Filter: ON PK Fc 80 Hz Gain 1.5 dB Q 0.70
+
+# Open-AdaptSound — personalized hearing profile (safe include)
+Include: Open-AdaptSound.txt

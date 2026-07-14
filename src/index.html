@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Open-AdaptSound</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="main.js" defer></script>
+  </head>
+  <body>
+    <div id="app">
+      <div class="top-bar">
+        <div class="progress" id="progress" aria-hidden="true"></div>
+        <button type="button" class="icon-btn" id="btn-settings" title="Settings" aria-label="Settings">
+          ⚙
+        </button>
+      </div>
+
+      <div class="card">
+        <!-- Step 0: Welcome -->
+        <section class="step active" data-step="0" id="step-welcome">
+          <span class="badge">Open-AdaptSound</span>
+          <h1>Personalize your sound</h1>
+          <p class="lead">
+            A short listening check tunes your headphones to how
+            <em>you</em> hear — then applies it system-wide with zero lag.
+          </p>
+
+          <div class="status-chip" id="apo-chip" role="status">
+            Checking Equalizer APO…
+          </div>
+
+          <!-- Required driver callout -->
+          <div class="req-panel" id="req-panel">
+            <strong>Requires Equalizer APO</strong>
+            <p>
+              This app does <em>not</em> process audio itself. It configures
+              <strong>Equalizer APO</strong> (free system audio driver). First-time setup:
+            </p>
+            <ol class="req-steps">
+              <li>Install Equalizer APO (official installer)</li>
+              <li>In <strong>Device Selector</strong>, enable your <strong>headphones</strong></li>
+              <li><strong>Reboot Windows</strong> when asked</li>
+              <li>Open Open-AdaptSound again → run the beep test → Apply</li>
+            </ol>
+            <p class="req-note">
+              We don’t bundle the driver inside this EXE: APO needs device selection + a reboot,
+              which can’t be fully automated safely.
+            </p>
+          </div>
+
+          <ul class="checklist">
+            <li>
+              <span class="icon">🎧</span>
+              <span>Wear your headphones and keep them on the whole time.</span>
+            </li>
+            <li>
+              <span class="icon">🔔</span>
+              <span>Beeps only · Yes / No · 15 full-range bands per ear (to 16 kHz).</span>
+            </li>
+            <li>
+              <span class="icon">🤫</span>
+              <span>Quiet room · ~5 minutes · soft beeps only.</span>
+            </li>
+          </ul>
+          <div class="spacer"></div>
+          <div class="actions">
+            <button class="btn btn-primary" id="btn-start" type="button">
+              Start listening check
+            </button>
+            <button class="btn btn-ghost" id="btn-install-apo" type="button">
+              Install Equalizer APO (required)
+            </button>
+            <button class="btn btn-ghost" id="btn-apo-help" type="button">
+              Why reboot? Setup help
+            </button>
+            <button class="btn btn-ghost hidden" id="btn-reapply" type="button">
+              Re-apply last profile
+            </button>
+            <button class="btn btn-ghost hidden" id="btn-start-anyway" type="button">
+              Continue without APO (test only)
+            </button>
+          </div>
+        </section>
+
+        <!-- Driver setup help -->
+        <section class="step" data-step="setup" id="step-setup">
+          <span class="badge">Required driver</span>
+          <h1>Equalizer APO setup</h1>
+          <p class="lead">
+            Open-AdaptSound writes your hearing profile into Equalizer APO.
+            Without that driver, profiles can’t go system-wide.
+          </p>
+          <div class="settings-list">
+            <div class="setting-row">
+              <div>
+                <strong>1. Download &amp; install</strong>
+                <span>Run the official Equalizer APO installer (admin prompt is normal)</span>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div>
+                <strong>2. Device Selector</strong>
+                <span>Check the box for your headphones / output device → OK</span>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div>
+                <strong>3. Reboot Windows</strong>
+                <span>APO attaches to the audio stack — a restart is required after install</span>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div>
+                <strong>4. Come back here</strong>
+                <span>Open Open-AdaptSound → beep Yes/No test → Apply Adapt Sound Profile</span>
+              </div>
+            </div>
+          </div>
+          <div class="status-panel compact" style="margin-top: 14px">
+            <p class="status-text" style="min-height: 0">
+              Why not inside our installer? APO’s Device Selector needs you to pick devices,
+              silent install still needs that step, and Windows expects a reboot. Shipping the
+              driver inside our EXE would be fragile and confusing — we launch the official setup instead.
+            </p>
+          </div>
+          <div class="spacer"></div>
+          <div class="actions">
+            <button class="btn btn-primary" id="btn-setup-download" type="button">
+              Download Equalizer APO
+            </button>
+            <button class="btn btn-ghost" id="btn-setup-recheck" type="button">
+              I’ve installed &amp; rebooted — recheck
+            </button>
+            <button class="btn btn-ghost" id="btn-setup-back" type="button">Back</button>
+          </div>
+        </section>
+
+        <!-- Step 1: Environment -->
+        <section class="step" data-step="1" id="step-noise">
+          <span class="badge">Step 2 of 5</span>
+          <h1>Quiet room check</h1>
+          <p class="lead">
+            We’ll sample ambient noise for a moment. Close noisy apps and pause
+            music or calls.
+          </p>
+          <div class="status-panel" id="noise-panel">
+            <p class="status-text" id="noise-status">
+              Tap the button below when you’re ready.
+            </p>
+            <div class="meter" aria-hidden="true"><span id="noise-meter"></span></div>
+          </div>
+          <div class="spacer"></div>
+          <div class="actions">
+            <button class="btn btn-primary" id="btn-noise-check" type="button">
+              Check my room
+            </button>
+            <button class="btn btn-ghost hidden" id="btn-noise-continue" type="button">
+              Continue
+            </button>
+            <button class="btn btn-ghost" id="btn-noise-skip" type="button">
+              Skip for now
+            </button>
+            <button class="btn btn-ghost" id="btn-noise-back" type="button">Back</button>
+          </div>
+        </section>
+
+        <!-- Step 2: Left ear — Samsung-style Yes/No beeps -->
+        <section class="step" data-step="2" id="step-left">
+          <div class="ear-header">
+            <span class="ear-pill">Left ear</span>
+            <span class="freq-progress" id="left-freq-label">Sound 1 of 15</span>
+          </div>
+          <div class="band-progress" aria-hidden="true">
+            <span id="left-band" style="width: 11%"></span>
+          </div>
+          <h1>Can you hear the beeps?</h1>
+          <p class="lead">
+            Beeps play in your <strong>left</strong> ear only — over and over.
+            Tap Yes or No. The system finds your softest level automatically.
+          </p>
+          <div class="tone-visual playing pulse-mode" id="left-visual">
+            <span class="wave">🔔</span>
+          </div>
+          <p class="hear-hint" id="left-hint">Listen… beeps are playing now</p>
+          <div class="spacer"></div>
+          <div class="actions yesno-actions">
+            <button class="btn btn-yes" id="btn-left-yes" type="button">
+              Yes — I can hear it
+            </button>
+            <button class="btn btn-no" id="btn-left-no" type="button">
+              No — I can’t hear it
+            </button>
+            <button class="btn btn-ghost" id="btn-left-back" type="button">Back</button>
+          </div>
+        </section>
+
+        <!-- Step 3: Right ear — Samsung-style Yes/No beeps -->
+        <section class="step" data-step="3" id="step-right">
+          <div class="ear-header">
+            <span class="ear-pill">Right ear</span>
+            <span class="freq-progress" id="right-freq-label">Sound 1 of 15</span>
+          </div>
+          <div class="band-progress" aria-hidden="true">
+            <span id="right-band" style="width: 11%"></span>
+          </div>
+          <h1>Can you hear the beeps?</h1>
+          <p class="lead">
+            Same check for your <strong>right</strong> ear.
+            Keep answering Yes or No until this side is done.
+          </p>
+          <div class="tone-visual playing pulse-mode" id="right-visual">
+            <span class="wave">🔔</span>
+          </div>
+          <p class="hear-hint" id="right-hint">Listen… beeps are playing now</p>
+          <div class="spacer"></div>
+          <div class="actions yesno-actions">
+            <button class="btn btn-yes" id="btn-right-yes" type="button">
+              Yes — I can hear it
+            </button>
+            <button class="btn btn-no" id="btn-right-no" type="button">
+              No — I can’t hear it
+            </button>
+            <button class="btn btn-ghost" id="btn-right-back" type="button">Back</button>
+          </div>
+        </section>
+
+        <!-- Step 4: Apply -->
+        <section class="step" data-step="4" id="step-apply">
+          <div class="success-icon" id="apply-icon">✨</div>
+          <h1 id="apply-title">Your profile is ready</h1>
+          <p class="lead" id="apply-lead">
+            We’ll lock in a personalized sound profile for every app on this PC.
+          </p>
+          <div class="summary-card" id="apply-summary"></div>
+
+          <div class="mode-row" id="mode-row">
+            <span class="mode-label">Intensity</span>
+            <div class="seg" id="mode-seg" role="group" aria-label="Boost intensity">
+              <button type="button" class="seg-btn" data-mode="gentle">Gentle</button>
+              <button type="button" class="seg-btn active" data-mode="half">Balanced</button>
+              <button type="button" class="seg-btn" data-mode="full">Full</button>
+            </div>
+          </div>
+
+          <div class="result-meta hidden" id="apply-meta"></div>
+          <div class="spacer"></div>
+          <div class="actions">
+            <button class="btn btn-primary" id="btn-apply" type="button">
+              Apply Adapt Sound Profile
+            </button>
+            <button class="btn btn-ghost hidden" id="btn-retake" type="button">
+              Retake listening check
+            </button>
+            <button class="btn btn-ghost hidden" id="btn-reset" type="button">
+              Reset to flat sound
+            </button>
+            <button class="btn btn-ghost hidden" id="btn-export" type="button">
+              Save profile copy
+            </button>
+            <button class="btn btn-ghost hidden" id="btn-open-config" type="button">
+              Open config folder
+            </button>
+            <button class="btn btn-danger hidden" id="btn-disable" type="button">
+              Disable Adapt Sound
+            </button>
+          </div>
+        </section>
+
+        <!-- Settings overlay -->
+        <section class="step" data-step="settings" id="step-settings">
+          <span class="badge">Settings</span>
+          <h1>Preferences</h1>
+          <p class="lead">Tweaks stay on this PC only. Nothing is uploaded.</p>
+
+          <div class="settings-list">
+            <label class="setting-row">
+              <div>
+                <strong>Default intensity</strong>
+                <span>Used when a new profile is built</span>
+              </div>
+              <select id="set-mode">
+                <option value="gentle">Gentle</option>
+                <option value="half" selected>Balanced</option>
+                <option value="full">Full clarity</option>
+              </select>
+            </label>
+
+            <div class="setting-row">
+              <div>
+                <strong>Test style</strong>
+                <span>Beeps only · Yes / No · all 15 bands per ear</span>
+              </div>
+              <span style="color: var(--good); font-size: 0.85rem; font-weight: 600">Locked</span>
+            </div>
+          </div>
+
+          <div class="status-panel compact" id="settings-apo">
+            <p class="status-text" id="settings-apo-text">Equalizer APO status…</p>
+          </div>
+
+          <div class="spacer"></div>
+          <div class="actions">
+            <button class="btn btn-primary" id="btn-settings-done" type="button">Done</button>
+            <button class="btn btn-ghost" id="btn-settings-apo" type="button">
+              Get Equalizer APO
+            </button>
+            <button class="btn btn-ghost" id="btn-settings-folder" type="button">
+              Open config folder
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <p class="footer-note">
+        100% offline · Safe include (keeps other EQ) · Close window to tray
+      </p>
+    </div>
+  </body>
+</html>

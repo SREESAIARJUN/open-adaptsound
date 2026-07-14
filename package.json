@@ -1,0 +1,19 @@
+{
+  "name": "open-adaptsound",
+  "private": true,
+  "version": "1.2.0",
+  "description": "Personal hearing EQ for Windows via Equalizer APO",
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "test:calc": "node --test src/calculator.test.js src/staircase.test.js",
+    "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "test": "npm run test:calc && npm run test:rust",
+    "check": "cargo check --manifest-path src-tauri/Cargo.toml"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

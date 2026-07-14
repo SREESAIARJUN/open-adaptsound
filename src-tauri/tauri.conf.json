@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Open-AdaptSound",
+  "version": "1.2.0",
+  "identifier": "com.openadaptsound.app",
+  "build": {
+    "frontendDist": "../src"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Open-AdaptSound",
+        "width": 480,
+        "height": 720,
+        "minWidth": 400,
+        "minHeight": 600,
+        "resizable": true,
+        "center": true,
+        "decorations": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false
+      }
+    },
+    "longDescription": "Beep hearing test per ear, then system-wide parametric EQ through Equalizer APO.",
+    "shortDescription": "Personal hearing EQ for Windows",
+    "category": "Utility",
+    "copyright": "MIT"
+  }
+}
