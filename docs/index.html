@@ -6,13 +6,13 @@
     <title>Open-AdaptSound — Personal Hearing Equalizer for Windows</title>
     <meta
       name="description"
-      content="Free Windows personal hearing equalizer. Beep Yes/No test per ear (15 bands to 16 kHz), then system-wide EQ via Equalizer APO for games, browser, and calls."
+      content="Official release site. Free Windows personal hearing equalizer: beep Yes/No test per ear (15 bands to 16 kHz), system-wide EQ via Equalizer APO."
     />
     <meta name="author" content="Open-AdaptSound" />
     <link rel="canonical" href="https://sreesaiarjun.github.io/open-adaptsound/" />
 
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Open-AdaptSound — Personal Hearing Equalizer for Windows" />
+    <meta property="og:title" content="Open-AdaptSound — Official Release" />
     <meta
       property="og:description"
       content="Beep test your ears, build a left/right EQ profile, apply system-wide with Equalizer APO."
@@ -20,7 +20,7 @@
     <meta property="og:url" content="https://sreesaiarjun.github.io/open-adaptsound/" />
     <meta property="og:image" content="https://sreesaiarjun.github.io/open-adaptsound/logo.png" />
     <meta name="twitter:card" content="summary" />
-    <meta name="theme-color" content="#0b0d12" />
+    <meta name="theme-color" content="#080a0f" />
 
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="apple-touch-icon" href="logo.png" />
@@ -42,10 +42,10 @@
     </script>
   </head>
   <body>
-    <div class="page">
-      <header class="nav">
+    <header class="top">
+      <div class="shell nav">
         <a class="brand" href="./">
-          <img src="logo.png" width="32" height="32" alt="" />
+          <img src="logo.png" width="36" height="36" alt="" />
           <span>Open-AdaptSound</span>
         </a>
         <nav class="links" aria-label="Primary">
@@ -59,17 +59,18 @@
             >Download</a
           >
         </nav>
-      </header>
+      </div>
+    </header>
 
-      <main>
-        <section class="hero">
-          <img class="hero-mark" src="logo.png" width="88" height="88" alt="Open-AdaptSound" />
-          <p class="eyebrow">Windows 10 / 11 · Free · Offline · MIT</p>
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Official release · Windows 10 / 11 · Free · MIT</p>
           <h1>Personal hearing equalizer for your whole PC</h1>
           <p class="lead">
             Beep-test each ear, build a left/right frequency map, and apply a
             system-wide EQ profile through Equalizer APO—games, browser, calls,
-            and music, same tuning.
+            and music use the same tuning.
           </p>
           <div class="cta-row">
             <a
@@ -78,7 +79,7 @@
               >Download for Windows</a
             >
             <a class="btn ghost" href="https://github.com/SREESAIARJUN/open-adaptsound"
-              >Source on GitHub</a
+              >View source</a
             >
           </div>
           <p class="fine">
@@ -86,114 +87,123 @@
             <a href="https://sourceforge.net/projects/equalizerapo/files/latest/download"
               >Equalizer APO</a
             >
-            (install once, pick headphones, reboot).
+            — install once, enable headphones, reboot, then run this app.
           </p>
-        </section>
+        </div>
+        <div class="hero-visual">
+          <img class="hero-mark" src="logo.png" width="280" height="280" alt="Open-AdaptSound" />
+        </div>
+      </section>
 
-        <section id="why" class="block">
-          <h2>Why this exists</h2>
-          <p class="copy">
-            Windows plays one generic mix. It does not know your ears, your
-            headphones, or which bands you hear less well. Music-player EQs stay
-            in one app. Manual Equalizer APO is powerful but easy to mis-set.
-          </p>
-          <div class="grid2">
-            <div class="card">
-              <h3>Without it</h3>
-              <ul>
-                <li>Factory sound for a “generic” listener</li>
-                <li>EQ only inside Spotify / one player</li>
-                <li>Guessing which bands to boost</li>
-                <li>Same curve for both ears</li>
-              </ul>
-            </div>
-            <div class="card accent">
-              <h3>With Open-AdaptSound</h3>
-              <ul>
-                <li>Matched to how <em>you</em> hear</li>
-                <li>System-wide via Equalizer APO</li>
-                <li>Beep Yes/No finds thresholds</li>
-                <li>Independent left / right peaks</li>
-              </ul>
-            </div>
+      <section id="why" class="block">
+        <h2>Why this exists</h2>
+        <p class="copy">
+          Windows plays one generic mix. It does not know your ears, your headphones,
+          or which bands you hear less well. Music-player EQs stay in one app.
+          Manual Equalizer APO is powerful but easy to mis-set. Open-AdaptSound
+          measures how you hear and writes a real system-wide profile.
+        </p>
+        <div class="grid2">
+          <div class="card">
+            <h3>Without it</h3>
+            <ul>
+              <li>Factory sound for a “generic” listener</li>
+              <li>EQ only inside Spotify / one player</li>
+              <li>Guessing which bands to boost</li>
+              <li>Same curve for both ears</li>
+            </ul>
           </div>
-        </section>
-
-        <section id="how" class="block">
-          <h2>How it works</h2>
-          <ol class="steps">
-            <li>
-              <strong>Hearing check</strong> — pure sine beeps, left then right,
-              15 bands to 16&nbsp;kHz. Answer Yes or No.
-            </li>
-            <li>
-              <strong>Profile</strong> — thresholds become dB gains + preamp
-              headroom (Gentle / Balanced / Full).
-            </li>
-            <li>
-              <strong>Apply</strong> — writes Equalizer APO config (hot-reload,
-              keeps your other filters).
-            </li>
-            <li>
-              <strong>Use</strong> — every app is equalized at the Windows audio
-              stack. This app is not in the playback path.
-            </li>
-          </ol>
-          <p class="mono">headphones → beep test → Open-AdaptSound → Equalizer APO → all apps</p>
-        </section>
-
-        <section id="for" class="block">
-          <h2>Who it’s for</h2>
-          <p class="copy">If you searched for any of these, you’re in the right place:</p>
-          <ul class="tags">
-            <li>personal hearing equalizer Windows</li>
-            <li>system-wide headphone EQ</li>
-            <li>Equalizer APO hearing test</li>
-            <li>left / right ear equalizer</li>
-            <li>hearing compensation PC</li>
-            <li>auto EQ from listening test</li>
-          </ul>
-        </section>
-
-        <section id="install" class="block">
-          <h2>Install</h2>
-          <div class="grid2">
-            <div class="card">
-              <h3>1. Equalizer APO</h3>
-              <ol>
-                <li>
-                  <a href="https://sourceforge.net/projects/equalizerapo/files/latest/download"
-                    >Download Equalizer APO</a
-                  >
-                </li>
-                <li>Device Selector → enable headphones</li>
-                <li><strong>Reboot</strong> when asked</li>
-              </ol>
-            </div>
-            <div class="card">
-              <h3>2. Open-AdaptSound</h3>
-              <ol>
-                <li>
-                  <a href="https://github.com/SREESAIARJUN/open-adaptsound/releases/latest"
-                    >Download the .exe installer</a
-                  >
-                </li>
-                <li>Quiet room → beep test (Y/N)</li>
-                <li>Apply profile</li>
-              </ol>
-            </div>
+          <div class="card accent">
+            <h3>With Open-AdaptSound</h3>
+            <ul>
+              <li>Matched to how <em>you</em> hear</li>
+              <li>System-wide via Equalizer APO</li>
+              <li>Beep Yes/No finds thresholds</li>
+              <li>Independent left / right peaks</li>
+            </ul>
           </div>
-          <p class="fine">
-            We don’t bundle APO: device selection and first reboot can’t be fully
-            automated.
-            <a href="https://github.com/SREESAIARJUN/open-adaptsound/blob/main/docs/EQUALIZER-APO.md"
-              >Why</a
-            >.
-          </p>
-        </section>
+        </div>
+      </section>
 
-        <section id="faq" class="block">
-          <h2>FAQ</h2>
+      <section id="how" class="block">
+        <h2>How it works</h2>
+        <ol class="steps">
+          <li>
+            <span class="step-num">1</span>
+            <strong>Hearing check</strong>
+            Pure sine beeps, left then right, 15 bands to 16 kHz. Answer Yes or No.
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <strong>Profile</strong>
+            Thresholds become dB gains + preamp headroom (Gentle / Balanced / Full).
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <strong>Apply</strong>
+            Writes Equalizer APO config (hot-reload, keeps your other filters).
+          </li>
+          <li>
+            <span class="step-num">4</span>
+            <strong>Use</strong>
+            Every app is equalized at the Windows stack. This app leaves the path.
+          </li>
+        </ol>
+        <p class="mono">headphones → beep test → Open-AdaptSound → Equalizer APO → all apps</p>
+      </section>
+
+      <section id="for" class="block">
+        <h2>Who it’s for</h2>
+        <p class="copy">If you searched for any of these, this is the official home:</p>
+        <ul class="tags">
+          <li>personal hearing equalizer Windows</li>
+          <li>system-wide headphone EQ</li>
+          <li>Equalizer APO hearing test</li>
+          <li>left / right ear equalizer</li>
+          <li>hearing compensation PC</li>
+          <li>auto EQ from listening test</li>
+        </ul>
+      </section>
+
+      <section id="install" class="block">
+        <h2>Install (official path)</h2>
+        <div class="grid2">
+          <div class="card">
+            <h3>1. Equalizer APO</h3>
+            <ol>
+              <li>
+                <a href="https://sourceforge.net/projects/equalizerapo/files/latest/download"
+                  >Download Equalizer APO</a
+                >
+              </li>
+              <li>Device Selector → enable headphones</li>
+              <li><strong>Reboot</strong> when asked</li>
+            </ol>
+          </div>
+          <div class="card">
+            <h3>2. Open-AdaptSound</h3>
+            <ol>
+              <li>
+                <a href="https://github.com/SREESAIARJUN/open-adaptsound/releases/latest"
+                  >Download the official .exe installer</a
+                >
+              </li>
+              <li>Quiet room → beep test (Y / N)</li>
+              <li>Apply profile</li>
+            </ol>
+          </div>
+        </div>
+        <p class="fine" style="margin-top: 14px">
+          We don’t bundle APO: device selection and first reboot can’t be fully automated.
+          <a href="https://github.com/SREESAIARJUN/open-adaptsound/blob/main/docs/EQUALIZER-APO.md"
+            >Why</a
+          >.
+        </p>
+      </section>
+
+      <section id="faq" class="block">
+        <h2>FAQ</h2>
+        <div class="faq-grid">
           <details>
             <summary>Is this a medical hearing test?</summary>
             <p>No. Practical headphone check for EQ—not a clinical audiogram.</p>
@@ -217,29 +227,44 @@
             <summary>Does it wipe my existing APO config?</summary>
             <p>No. It adds an Include file for the personal profile.</p>
           </details>
-        </section>
+          <details>
+            <summary>Where is the official download?</summary>
+            <p>
+              Only from
+              <a href="https://github.com/SREESAIARJUN/open-adaptsound/releases/latest"
+                >GitHub Releases</a
+              >
+              linked on this site.
+            </p>
+          </details>
+        </div>
+      </section>
 
-        <section class="cta-end">
-          <h2>Get clearer sound for how you hear</h2>
-          <a
-            class="btn primary"
-            href="https://github.com/SREESAIARJUN/open-adaptsound/releases/latest"
-            >Download latest release</a
-          >
-        </section>
-      </main>
+      <section class="cta-end">
+        <h2>Official Windows release</h2>
+        <p class="lead">
+          Installer, source, and updates live on GitHub. This page is the product home.
+        </p>
+        <a
+          class="btn primary"
+          href="https://github.com/SREESAIARJUN/open-adaptsound/releases/latest"
+          >Download latest release</a
+        >
+      </section>
+    </main>
 
-      <footer>
+    <footer>
+      <div class="shell">
         <p>
           <a href="https://github.com/SREESAIARJUN/open-adaptsound">GitHub</a>
           ·
           <a href="https://github.com/SREESAIARJUN/open-adaptsound/releases">Releases</a>
           ·
-          <a href="https://github.com/SREESAIARJUN/open-adaptsound/blob/main/docs/FAQ.md">Full FAQ</a>
+          <a href="https://github.com/SREESAIARJUN/open-adaptsound/blob/main/docs/FAQ.md">Docs</a>
           · MIT
         </p>
         <p class="fine">Not affiliated with Equalizer APO or any phone OEM.</p>
-      </footer>
-    </div>
+      </div>
+    </footer>
   </body>
 </html>

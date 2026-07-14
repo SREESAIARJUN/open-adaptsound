@@ -9,7 +9,7 @@ Run a short **per-ear beep hearing test**, build a **left/right parametric EQ** 
 [![Release](https://img.shields.io/github/v/release/SREESAIARJUN/open-adaptsound)](https://github.com/SREESAIARJUN/open-adaptsound/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/SREESAIARJUN/open-adaptsound/total)](https://github.com/SREESAIARJUN/open-adaptsound/releases)
 
-**Site:** [sreesaiarjun.github.io/open-adaptsound](https://sreesaiarjun.github.io/open-adaptsound/) · **Download:** [Windows installer](https://github.com/SREESAIARJUN/open-adaptsound/releases/latest) · **Requires:** [Equalizer APO](https://sourceforge.net/projects/equalizerapo/files/latest/download)
+**Official site:** [sreesaiarjun.github.io/open-adaptsound](https://sreesaiarjun.github.io/open-adaptsound/) · **Download:** [Windows installer](https://github.com/SREESAIARJUN/open-adaptsound/releases/latest) · **Requires:** [Equalizer APO](https://sourceforge.net/projects/equalizerapo/files/latest/download)
 
 ---
 
