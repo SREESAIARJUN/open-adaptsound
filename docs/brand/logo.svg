@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Open-AdaptSound">
+  <defs>
+    <linearGradient id="waveL" x1="40" y1="256" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#5b8cff"/>
+      <stop offset="100%" stop-color="#7aa0ff"/>
+    </linearGradient>
+    <linearGradient id="waveR" x1="256" y1="256" x2="472" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#9b7cff"/>
+      <stop offset="100%" stop-color="#7c5cff"/>
+    </linearGradient>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#9dffd0"/>
+      <stop offset="45%" stop-color="#3dd68c"/>
+      <stop offset="100%" stop-color="#3dd68c" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- rounded app tile -->
+  <rect width="512" height="512" rx="112" fill="#0b0d12"/>
+  <!-- soft vignette -->
+  <circle cx="256" cy="256" r="190" fill="#12161f"/>
+  <!-- left ear signature (asymmetric) -->
+  <path d="M72 248 C110 248 128 190 168 190 C210 190 220 300 256 256"
+        fill="none" stroke="url(#waveL)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- right ear signature (different shape) -->
+  <path d="M256 256 C292 212 318 170 360 178 C408 188 420 250 440 268"
+        fill="none" stroke="url(#waveR)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- focus ring = calibrated threshold -->
+  <circle cx="256" cy="256" r="54" fill="none" stroke="#6ea0ff" stroke-width="6" opacity="0.85"/>
+  <circle cx="256" cy="256" r="38" fill="none" stroke="#a78bfa" stroke-width="4" opacity="0.55"/>
+  <circle cx="256" cy="256" r="18" fill="url(#core)" filter="url(#glow)"/>
+  <circle cx="256" cy="256" r="7" fill="#e8fff5"/>
+</svg>
