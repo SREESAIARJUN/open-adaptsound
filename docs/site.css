@@ -1,0 +1,284 @@
+:root {
+  --bg: #0b0d12;
+  --card: #141822;
+  --text: #eef1f7;
+  --muted: #9aa3b5;
+  --accent: #5b8cff;
+  --accent2: #7c5cff;
+  --good: #3dd68c;
+  --line: rgba(255, 255, 255, 0.08);
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--text);
+  background: radial-gradient(900px 480px at 50% -10%, #1a2744 0%, var(--bg) 55%);
+  line-height: 1.55;
+}
+
+a {
+  color: #9ec0ff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.nav {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logo {
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+.nav nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  font-size: 0.92rem;
+}
+
+.nav nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.nav nav a:hover {
+  color: var(--text);
+}
+
+.btn-sm {
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+main {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 12px 20px 48px;
+}
+
+.hero {
+  padding: 28px 0 12px;
+}
+
+.eyebrow {
+  color: var(--good);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+
+h1 {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin: 0 0 14px;
+}
+
+.lead {
+  font-size: 1.1rem;
+  color: var(--muted);
+  max-width: 38rem;
+  margin: 0 0 22px;
+}
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 650;
+  text-decoration: none !important;
+  font-size: 0.98rem;
+}
+
+.btn.primary {
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 10px 28px rgba(91, 140, 255, 0.28);
+}
+
+.btn.ghost {
+  color: var(--text);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.fine {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.block {
+  margin-top: 40px;
+  padding-top: 8px;
+}
+
+h2 {
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+}
+
+h3 {
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+@media (max-width: 700px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 16px 12px;
+}
+
+.card.accent {
+  border-color: rgba(91, 140, 255, 0.35);
+  background: linear-gradient(160deg, rgba(91, 140, 255, 0.12), var(--card));
+}
+
+.card ul,
+.card ol {
+  margin: 0;
+  padding-left: 1.15em;
+  color: var(--muted);
+}
+
+.card li {
+  margin-bottom: 6px;
+}
+
+.steps {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--muted);
+}
+
+.steps li {
+  margin-bottom: 10px;
+}
+
+.steps strong {
+  color: var(--text);
+}
+
+.mono {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--line);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.85rem;
+  color: #c5d0e6;
+  overflow-x: auto;
+}
+
+.tags {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tags li {
+  font-size: 0.82rem;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+details {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+details p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.cta-end {
+  text-align: center;
+  padding: 28px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(91, 140, 255, 0.25);
+  background: rgba(91, 140, 255, 0.08);
+}
+
+.cta-end h2 {
+  margin-bottom: 16px;
+}
+
+footer {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 8px 20px 40px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+footer .fine {
+  margin-top: 6px;
+}
