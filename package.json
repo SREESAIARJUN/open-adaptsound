@@ -2,7 +2,28 @@
   "name": "open-adaptsound",
   "private": true,
   "version": "1.2.0",
-  "description": "Personal hearing EQ for Windows via Equalizer APO",
+  "description": "Personal hearing equalizer for Windows — beep test to system-wide EQ via Equalizer APO",
+  "keywords": [
+    "windows",
+    "equalizer",
+    "equalizer-apo",
+    "hearing",
+    "hearing-test",
+    "personal-eq",
+    "headphones",
+    "system-wide-eq",
+    "parametric-eq",
+    "audiometry",
+    "tauri"
+  ],
+  "homepage": "https://github.com/SREESAIARJUN/open-adaptsound#readme",
+  "bugs": {
+    "url": "https://github.com/SREESAIARJUN/open-adaptsound/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SREESAIARJUN/open-adaptsound.git"
+  },
   "type": "module",
   "scripts": {
     "tauri": "tauri",
